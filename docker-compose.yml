@@ -1,0 +1,42 @@
+version: "3"
+
+volumes:
+  growth_hackers:
+
+services:
+#  server:
+#    container_name: madeira-server
+#    depends_on:
+#      - db
+#    links:
+#      - db
+#    environment:
+#      - DB_HOST=db
+#      - DB_PORT=5432
+#      - DB_NAME=madeira
+#      - DB_USERNAME=postgres
+#      - DB_PASSWORD=123456
+#    build:
+#      context: ./server
+#      dockerfile: ./Dockerfile
+#    volumes:
+#      - ./server:/server
+#      - /server/node_modules
+#    working_dir: /server
+#    ports:
+#      - 8080:8080
+#    stdin_open: true
+#    entrypoint: bash
+#    command: -c "rm -rf dist; yarn; yarn run start:dev"
+  db:
+    container_name: growth_hackers
+    image: mdillon/postgis
+    restart: always
+    environment:
+      - POSTGRES_DB=growth_hackers
+      - POSTGRES_USER=growth
+      - POSTGRES_PASSWORD=growth
+    ports:
+      - 5432:5432
+    volumes:
+      - growth_hackers:/var/lib/postgresql/data
