@@ -57,21 +57,11 @@ export class ProductsService {
   }
 
   findOne(id: number) {
-    return this.productEntityRepository.findOne(
-      {
-        id,
-      },
-      {
-        relations: ['category'],
-      },
-    );
+    return this.#verifyAndFindOne(id);
   }
 
   async remove(id: number) {
-    const row = await this.productEntityRepository.findOne({ id });
-    if (!row) {
-      throw new HttpException('Registro não encontrado', HttpStatus.NOT_FOUND);
-    }
+    const row = await this.#verifyAndFindOne(id);
     return this.productEntityRepository.remove(row);
   }
 
@@ -99,5 +89,20 @@ export class ProductsService {
       throw new HttpException('Categoria não encontrada', HttpStatus.NOT_FOUND);
     }
     return category;
+  }
+
+  async #verifyAndFindOne(id: number): Promise<ProductEntity> {
+    const entity = await this.productEntityRepository.findOne(
+      {
+        id,
+      },
+      {
+        relations: ['category'],
+      },
+    );
+    if (!entity) {
+      throw new HttpException('Produto não encontrado', HttpStatus.NOT_FOUND);
+    }
+    return entity;
   }
 }
