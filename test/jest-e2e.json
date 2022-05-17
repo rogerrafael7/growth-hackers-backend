@@ -4,6 +4,7 @@
     "json",
     "ts"
   ],
+  "maxConcurrency": 1,
   "rootDir": "../src",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",

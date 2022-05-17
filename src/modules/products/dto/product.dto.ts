@@ -15,4 +15,12 @@ export class ProductDto {
   @IsOptional()
   @IsString()
   nameCategory: string;
+
+  static create(param: Partial<ProductDto>) {
+    const instance = new ProductDto();
+    for (const paramKey in param) {
+      instance[paramKey] = param[paramKey];
+    }
+    return instance;
+  }
 }

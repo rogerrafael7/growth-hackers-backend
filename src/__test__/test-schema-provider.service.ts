@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import ormConfig from '../modules/database/ormConfig';
 
 export function promiseDelay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -14,7 +15,7 @@ export class TestSchemaProvider {
   ) {}
 
   async clear() {
-    const schemaName = this.config.get('database').schema;
+    const schemaName = ormConfig.schema;
     return this.connection.query(`
       DO $$ DECLARE
       r RECORD;

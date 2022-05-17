@@ -1,10 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ProductDto } from './dto/product.dto';
-import { Connection, EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { ProductEntity } from '../database/entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CategoryEntity } from '../database/entities/category.entity';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { Readable } from 'stream';
 
 @Injectable()
 export class ProductsService {
@@ -12,6 +13,22 @@ export class ProductsService {
     @InjectRepository(ProductEntity)
     readonly productEntityRepository: Repository<ProductEntity>,
   ) {}
+
+  async exportByCategory(categoryId: number): Promise<Readable> {
+    const products = await this.productEntityRepository.find({
+      where: {
+        category: categoryId,
+      },
+      relations: ['category'],
+    });
+    if (!products.length) {
+      throw new HttpException(
+        'Não existem dados para essa categoria',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return Readable.from(JSON.stringify(products));
+  }
 
   create(productDto: ProductDto) {
     return this.save(productDto);
