@@ -3,40 +3,39 @@ version: "3"
 volumes:
   growth_hackers:
 
+networks:
+  hostnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
 services:
-#  server:
-#    container_name: madeira-server
-#    depends_on:
-#      - db
-#    links:
-#      - db
-#    environment:
-#      - DB_HOST=db
-#      - DB_PORT=5432
-#      - DB_NAME=madeira
-#      - DB_USERNAME=postgres
-#      - DB_PASSWORD=123456
-#    build:
-#      context: ./server
-#      dockerfile: ./Dockerfile
-#    volumes:
-#      - ./server:/server
-#      - /server/node_modules
-#    working_dir: /server
-#    ports:
-#      - 8080:8080
-#    stdin_open: true
-#    entrypoint: bash
-#    command: -c "rm -rf dist; yarn; yarn run start:dev"
   db:
     container_name: growth_hackers
-    image: mdillon/postgis
+    image: postgres
     restart: always
     environment:
       - POSTGRES_DB=growth_hackers
       - POSTGRES_USER=growth
       - POSTGRES_PASSWORD=growth
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - growth_hackers:/var/lib/postgresql/data
+    networks:
+      hostnet:
+    healthcheck:
+      test: "pg_isready -U growth -d growth_hackers && psql --username=growth --list"
+      timeout: 10s
+      retries: 5
+
+  db_setup:
+    image: postgres
+    restart: on-failure
+    depends_on:
+      - db
+    command: ["bash", "-c", "PGPASSWORD=growth psql -h db -p 5432 -U growth -d growth_hackers -c \"drop schema if exists test cascade; create schema test\""]
+    networks:
+      hostnet:
+

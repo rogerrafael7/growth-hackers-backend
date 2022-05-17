@@ -1,20 +1,28 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { ConfigModule } from '@nestjs/config';
-import { ProductsModule } from './modules/products/products.module';
 import { DatabaseModule } from './modules/database/database.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProductsModule } from './modules/products/products.module';
 import { CategoriesModule } from './modules/categories/categories.module';
-import ormConfig from './modules/database/ormConfig';
+import dbConfiguration from './modules/database/ormConfig';
+import { TestSchemaProvider } from './__test__/test-schema-provider.service';
 
-@Module({
-  imports: [
+export const getMainModules = () => {
+  return [
     ConfigModule.forRoot(),
-    TypeOrmModule.forRoot(ormConfig),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [dbConfiguration],
+    }),
     DatabaseModule,
     ProductsModule,
     CategoriesModule,
-  ],
+  ];
+};
+
+@Module({
+  imports: [...getMainModules()],
   controllers: [AppController],
+  providers: [TestSchemaProvider],
 })
 export class AppModule {}

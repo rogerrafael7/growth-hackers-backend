@@ -4,50 +4,58 @@ import { Connection, EntityManager, Repository } from 'typeorm';
 import { ProductEntity } from '../database/entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CategoryEntity } from '../database/entities/category.entity';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    private connection: Connection,
     @InjectRepository(ProductEntity)
-    private readonly productEntityRepository: Repository<ProductEntity>,
+    readonly productEntityRepository: Repository<ProductEntity>,
   ) {}
 
   create(productDto: ProductDto) {
     return this.save(productDto);
   }
 
-  update(id: number, updateProductDto: ProductDto) {
+  update(id: number, updateProductDto: UpdateProductDto) {
     return this.save(updateProductDto, id);
   }
 
-  async save(productDto: ProductDto, id?: number) {
-    return this.connection.transaction(async (entityManager) => {
-      let row;
+  async save(productDto: ProductDto | UpdateProductDto, id?: number) {
+    return this.productEntityRepository.manager.transaction(
+      async (entityManager) => {
+        if (id) {
+          const productEntityRow = await this.productEntityRepository.findOne({
+            id,
+          });
+          if (!productEntityRow) {
+            throw new HttpException(
+              'Registro não encontrado',
+              HttpStatus.BAD_REQUEST,
+            );
+          }
+        } else if (!productDto.idCategory && !productDto.nameCategory) {
+          throw new HttpException(
+            'É obrigatório a parametrização de uma categoria',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
 
-      if (id) {
-        row = await this.productEntityRepository.findOne({ id });
-      } else {
-        row = await this.productEntityRepository.create(productDto);
-      }
-
-      if (!row) {
-        throw new HttpException(
-          'Registro não encontrado',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      if (!id || productDto.idCategory || productDto.nameCategory) {
-        row.category = await this.#ensureCategoryFromProductDto(
+        const productEntityRow = await this.productEntityRepository.create(
           productDto,
-          entityManager,
         );
-      }
-      return id
-        ? entityManager.update(ProductEntity, { id }, productDto)
-        : entityManager.save(ProductEntity, row);
-    });
+
+        if (productDto.idCategory || productDto.nameCategory) {
+          productEntityRow.category = await this.#ensureCategoryFromProductDto(
+            productDto,
+            entityManager,
+          );
+        }
+        return id
+          ? entityManager.update(ProductEntity, { id }, productEntityRow)
+          : entityManager.save(ProductEntity, productEntityRow);
+      },
+    );
   }
 
   findAll() {
@@ -66,7 +74,7 @@ export class ProductsService {
   }
 
   async #ensureCategoryFromProductDto(
-    productDto: ProductDto,
+    productDto: ProductDto | UpdateProductDto,
     entityManager: EntityManager,
   ): Promise<CategoryEntity | null> {
     if (!productDto.idCategory && !productDto.nameCategory) {
@@ -88,6 +96,7 @@ export class ProductsService {
     if (!category) {
       throw new HttpException('Categoria não encontrada', HttpStatus.NOT_FOUND);
     }
+
     return category;
   }
 

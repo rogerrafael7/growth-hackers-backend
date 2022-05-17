@@ -32,10 +32,10 @@ export class CategoriesService {
   }
 
   async remove(id: number) {
-    const entity = await this.#verifyAndFindOne(id);
+    const categoryEntityRow = await this.#verifyAndFindOne(id);
     const countProductsHasCategory = await this.productsRepository.count({
       where: {
-        category: entity,
+        category: categoryEntityRow,
       },
     });
     if (countProductsHasCategory > 0) {
@@ -44,7 +44,7 @@ export class CategoriesService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    return this.categoryRepository.remove(entity);
+    return this.categoryRepository.remove(categoryEntityRow);
   }
 
   async #verifyAndFindOne(id: number): Promise<CategoryEntity> {
