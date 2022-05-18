@@ -1,7 +1,5 @@
-import { ConnectionOptions } from 'typeorm';
 import { resolve as pathResolve } from 'path';
 import { enviroment } from '../../enviroment';
-import { registerAs } from '@nestjs/config';
 
 export default {
   type: 'postgres',
