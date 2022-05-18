@@ -1,6 +1,10 @@
 import { IsString, Length } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
+  @ApiProperty({
+    description: 'Nome do produto',
+  })
   @IsString()
   @Length(2, 200)
   name: string;
